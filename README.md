@@ -44,4 +44,4 @@ npm test
 npm run build
 ```
 
-Node 20 or later. MIT licensed.
+Node 26 or later. MIT licensed.
