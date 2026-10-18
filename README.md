@@ -1,8 +1,18 @@
-# job-ledger
+<div align="center">
+
+# Job Ledger
+
+**Bookkeeping for scheduled LLM jobs, so the model only has to judge.**
 
 ![npm](https://img.shields.io/npm/v/job-ledger) ![Node 26+](https://img.shields.io/badge/node-26%2B-339933?logo=nodedotjs&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
+![Dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)
+![For MCP servers](https://img.shields.io/badge/for-MCP%20servers-6E56CF)
+![License: MIT](https://img.shields.io/badge/license-MIT-blue)
 
-Bookkeeping for scheduled LLM jobs, so the model only has to judge.
+[What's in it](#whats-in-it) · [Using it](#using-it) · [Development](#development)
+
+</div>
 
 An unattended agent job (a daily digest, a playlist builder) has two kinds of work: judgment, which needs a model, and bookkeeping, which doesn't. Bookkeeping means remembering what's been done, handing items between steps, deduplicating, saving state and laying out the final message. Models are bad at bookkeeping. They mistype ids, renumber items, forget to save, and fight file tools that refuse their writes. Every one of those mistakes has happened in production on [Hermes](https://github.com/NousResearch/hermes-agent) cron jobs.
 
