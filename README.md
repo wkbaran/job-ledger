@@ -26,11 +26,11 @@ The code comes from [medium-reader-mcp](https://github.com/wkbaran/medium-reader
 
 ## Using it
 
-The servers that use it bundle it into their `dist/` at build time, so a deploy copies `dist/` and nothing else needs installing. During development, depend on the local checkout:
-
-```json
-"dependencies": { "job-ledger": "file:../job-ledger" }
+```bash
+npm install job-ledger
 ```
+
+To work on job-ledger and a server that uses it together, depend on the local checkout instead (`"job-ledger": "file:../job-ledger"`), and switch back before committing: a fresh clone of the server can't install a `file:` dependency.
 
 ```ts
 import { RunStore, updateJson, resolveRefs } from "job-ledger";
