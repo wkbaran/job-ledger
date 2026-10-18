@@ -1,6 +1,6 @@
 {
   "name": "job-ledger",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Bookkeeping for scheduled LLM jobs: runs, refs, seen sets and atomic state, so the model only judges",
   "license": "MIT",
   "author": "Bill Baran",

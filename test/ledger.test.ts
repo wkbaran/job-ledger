@@ -1,8 +1,24 @@
-import { mkdtemp, readdir, readFile, stat, symlink, utimes, writeFile } from "node:fs/promises";
+import { chmod, mkdtemp, readdir, readFile, stat, symlink, utimes, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { beforeEach, describe, expect, it } from "vitest";
-import { assignRefs, cleanRef, clip, insideDir, laterIso, localDate, readJson, resolveRefs, RunStore, textKey, updateJson, withLock } from "../src/index.js";
+import {
+  assignRefs,
+  cleanRef,
+  clip,
+  insideDir,
+  isoSeconds,
+  laterIso,
+  localDate,
+  LockBusyError,
+  readJson,
+  resolveRefs,
+  RunStore,
+  textKey,
+  updateJson,
+  withLock,
+  writeAtomic,
+} from "../src/index.js";
 
 let dir: string;
 beforeEach(async () => {
@@ -93,6 +109,35 @@ describe("withLock", () => {
     await writeFile(lock, "1 now\n");
     await expect(withLock(lock, async () => "ran", { waitMs: 200 })).rejects.toThrow(/held by another run/);
   });
+
+  it("throws LockBusyError, with the caller's message if given", async () => {
+    const lock = join(dir, "x.lock");
+    await writeFile(lock, "1 now\n");
+    const err = await withLock(lock, async () => "ran", { waitMs: 150, busyMessage: "Wait and call again." }).catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(LockBusyError);
+    expect((err as Error).message).toBe("Wait and call again.");
+  });
+});
+
+describe("writeAtomic", () => {
+  it("keeps an existing file's mode unless given one, and leaves no temp files", async () => {
+    const file = join(dir, "a.json");
+    await writeAtomic(file, "one\n");
+    expect((await stat(file)).mode & 0o777).toBe(0o644);
+    await chmod(file, 0o600);
+    await writeAtomic(file, "two\n");
+    expect((await stat(file)).mode & 0o777).toBe(0o600);
+    await writeAtomic(file, "three\n", 0o640);
+    expect((await stat(file)).mode & 0o777).toBe(0o640);
+    expect(await readFile(file, "utf8")).toBe("three\n");
+    expect(await readdir(dir)).toEqual(["a.json"]);
+  });
+
+  it("survives concurrent writes of one file from one process", async () => {
+    const file = join(dir, "a.json");
+    await Promise.all(Array.from({ length: 10 }, (_, i) => writeAtomic(file, `${i}\n`)));
+    expect(await readdir(dir)).toEqual(["a.json"]);
+  });
 });
 
 describe("RunStore", () => {
@@ -150,5 +195,6 @@ describe("text and time", () => {
     expect(laterIso("2026-10-02T00:00:00Z", "2026-10-01T00:00:00Z")).toBe("2026-10-02T00:00:00Z");
     expect(laterIso(undefined, "2026-10-01T00:00:00Z")).toBe("2026-10-01T00:00:00Z");
     expect(localDate(new Date("2026-10-03T04:00:00Z"), "America/Denver")).toBe("2026-10-02");
+    expect(isoSeconds(Date.parse("2026-10-02T12:15:24.789Z"))).toBe("2026-10-02T12:15:24Z");
   });
 });

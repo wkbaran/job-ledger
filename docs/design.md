@@ -15,7 +15,7 @@ The bugs that led to each rule:
 | Two overlapping runs each created that day's playlist | Shared daily resources are created under a lock |
 | A hand-patched history file collected duplicates | Dedup uses normalized keys, in code |
 
-## What's in the library today (0.1.0)
+## What's in the library today (0.2.0)
 
 Atomic JSON state (`updateJson`), lock files, run files per scope (`RunStore`), refs, comparison keys and time helpers. See the README.
 

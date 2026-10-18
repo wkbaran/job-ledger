@@ -16,7 +16,7 @@ The model needs no file tools, and state can't be lost by a run that sends its m
 
 | Module | Provides |
 |---|---|
-| `files` | `insideDir` (no symlinks or escapes), `writeAtomic` (temp file and rename), `withLock` (lock file with stale-lock recovery), `readJson`, `updateJson` (locked read-modify-write with `.bak` and corrupt-file recovery) |
+| `files` | `insideDir` (no symlinks or escapes), `writeAtomic` (temp file and rename; keeps the file's mode), `withLock` (lock file with stale-lock recovery; `LockBusyError` with an optional message for the model), `readJson`, `updateJson` (locked read-modify-write with `.bak` and corrupt-file recovery) |
 | `runs` | `RunStore`: run files per scope (`a-dnb-20261002T150000Z`), newest-N pruning, `latest()` |
 | `refs` | `assignRefs`, `cleanRef`, `resolveRefs`: tolerant of `k3`, `[K3]`, `"K3"` and repeats |
 | `text` | `textKey` (comparison keys: case, accents, `&`, punctuation), `clip` (cut at a clause or word break) |

@@ -1,4 +1,5 @@
-import { copyFile, lstat, open, readFile, realpath, rename, rm, stat, writeFile } from "node:fs/promises";
+import { randomBytes } from "node:crypto";
+import { chmod, copyFile, lstat, open, readFile, realpath, rename, rm, stat, writeFile } from "node:fs/promises";
 import { dirname, join, sep } from "node:path";
 
 export const LOCK_STALE_MS = 60_000;
@@ -24,11 +25,17 @@ export async function insideDir(dir: string, ...parts: string[]): Promise<string
   return target;
 }
 
-/** Write via `<file>.tmp-<pid>` and rename, so readers never see half a file. */
-export async function writeAtomic(file: string, text: string, mode = 0o644): Promise<void> {
-  const tmp = `${file}.tmp-${process.pid}`;
+/**
+ * Write via `<file>.tmp-<pid>-<random>` and rename, so readers never see half a
+ * file. Without `mode`, an existing file keeps its mode and a new one gets 0644.
+ */
+export async function writeAtomic(file: string, text: string, mode?: number): Promise<void> {
+  const keep = mode ?? ((await stat(file).catch(() => null))?.mode ?? 0o644) & 0o777;
+  const tmp = `${file}.tmp-${process.pid}-${randomBytes(3).toString("hex")}`;
   try {
-    await writeFile(tmp, text, { mode });
+    await writeFile(tmp, text, { mode: keep, flag: "wx" });
+    // The umask can narrow the mode given to writeFile.
+    await chmod(tmp, keep);
     await rename(tmp, file);
   } catch (err) {
     await rm(tmp, { force: true });
@@ -36,11 +43,21 @@ export async function writeAtomic(file: string, text: string, mode = 0o644): Pro
   }
 }
 
+/** Thrown by `withLock` when another holder keeps the lock past the wait. */
+export class LockBusyError extends Error {}
+
+export interface LockOptions {
+  staleMs?: number;
+  waitMs?: number;
+  /** The `LockBusyError` message, for callers whose errors are read by a model. */
+  busyMessage?: string;
+}
+
 /**
  * Run `fn` holding an exclusive lock file. A lock older than `staleMs` is
  * assumed to belong to a dead process and is removed.
  */
-export async function withLock<T>(lockFile: string, fn: () => Promise<T>, opts: { staleMs?: number; waitMs?: number } = {}): Promise<T> {
+export async function withLock<T>(lockFile: string, fn: () => Promise<T>, opts: LockOptions = {}): Promise<T> {
   const staleMs = opts.staleMs ?? LOCK_STALE_MS;
   const deadline = Date.now() + (opts.waitMs ?? LOCK_WAIT_MS);
   for (;;) {
@@ -56,7 +73,7 @@ export async function withLock<T>(lockFile: string, fn: () => Promise<T>, opts: 
         await rm(lockFile, { force: true });
         continue;
       }
-      if (Date.now() > deadline) throw new Error(`${lockFile.split(sep).pop()} is held by another run; try again in a minute.`);
+      if (Date.now() > deadline) throw new LockBusyError(opts.busyMessage ?? `${lockFile.split(sep).pop()} is held by another run; try again in a minute.`);
       await new Promise((r) => setTimeout(r, 100));
     }
   }
@@ -113,7 +130,7 @@ export interface UpdateResult<R> {
 export async function updateJson<T, R>(
   dir: string,
   name: string,
-  opts: { validate: (v: unknown) => T | null; initial: () => T; lock?: { staleMs?: number; waitMs?: number } },
+  opts: { validate: (v: unknown) => T | null; initial: () => T; lock?: LockOptions },
   change: (current: T) => { value: T; result: R } | Promise<{ value: T; result: R }>,
 ): Promise<UpdateResult<R>> {
   const file = await insideDir(dir, name);

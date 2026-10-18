@@ -1,6 +1,6 @@
 /** `2026-10-02T12:15:24Z`: ISO without milliseconds. */
-export function isoSeconds(d: Date): string {
-  return d.toISOString().replace(/\.\d{3}Z$/, "Z");
+export function isoSeconds(d: Date | number): string {
+  return new Date(d).toISOString().replace(/\.\d{3}Z$/, "Z");
 }
 
 /** The later of two ISO times. Use it so a "last run" time never moves backwards. */

@@ -1,5 +1,5 @@
-export { insideDir, isoStamp, LOCK_STALE_MS, readJson, serializeJson, updateJson, withLock, writeAtomic } from "./files.js";
-export type { Loaded, UpdateResult } from "./files.js";
+export { insideDir, isoStamp, LOCK_STALE_MS, LockBusyError, readJson, serializeJson, updateJson, withLock, writeAtomic } from "./files.js";
+export type { Loaded, LockOptions, UpdateResult } from "./files.js";
 export { RunStore } from "./runs.js";
 export type { RunStoreOptions } from "./runs.js";
 export { assignRefs, cleanRef, resolveRefs } from "./refs.js";
