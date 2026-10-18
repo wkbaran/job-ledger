@@ -1,5 +1,7 @@
 # job-ledger
 
+![npm](https://img.shields.io/npm/v/job-ledger) ![Node 26+](https://img.shields.io/badge/node-26%2B-339933?logo=nodedotjs&logoColor=white)
+
 Bookkeeping for scheduled LLM jobs, so the model only has to judge.
 
 An unattended agent job (a daily digest, a playlist builder) has two kinds of work: judgment, which needs a model, and bookkeeping, which doesn't. Bookkeeping means remembering what's been done, handing items between steps, deduplicating, saving state and laying out the final message. Models are bad at bookkeeping. They mistype ids, renumber items, forget to save, and fight file tools that refuse their writes. Every one of those mistakes has happened in production on [Hermes](https://github.com/NousResearch/hermes-agent) cron jobs.
@@ -25,6 +27,8 @@ The model needs no file tools, and state can't be lost by a run that sends its m
 The code comes from [medium-reader-mcp](https://github.com/wkbaran/medium-reader-mcp) and [substack-reader-mcp](https://github.com/wkbaran/substack-reader-mcp), where it has run the daily digests since 2026-10-02. [docs/design.md](docs/design.md) covers what's planned next: item pools that carry unpicked items forward, pick limits, and size-capped rendering.
 
 ## Using it
+
+Published on npm as [job-ledger](https://www.npmjs.com/package/job-ledger):
 
 ```bash
 npm install job-ledger
